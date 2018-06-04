@@ -1,0 +1,18 @@
+{% for info in flight_infos %}
+<div id="{{info['id']}}"
+     class="list-group-item list-group-item-action flex-column align-items-start flight-info">
+    <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1">{{ info["route"] }}</h5>
+        <h5 class="mb-auto">{{ info["date"] }}</h5>
+        <button type="button" class="close" aria-label="Close" onclick="delete_me( {{ info['id'] }} )">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <ol class="mb-auto">
+        {% for f in info["flights"] %}
+        <li>{{ "{}\t{}\t{}".format(f["airline"], f["time"], f["price"]) }}</li>
+        {% endfor %}
+    </ol>
+    <small><i>Last updated: {{ info["updated"] }}</i></small>
+</div>
+{% endfor %}

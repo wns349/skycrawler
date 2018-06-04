@@ -1,0 +1,120 @@
+<!doctype html>
+<title>SkyCrawler</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap-grid.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap-reboot.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='skycrawler.css') }}">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+<div class="container">
+    <div class="header">
+        <h3 class="text-info mb-auto">SkyCrawler</h3>
+        <h4 class="mb-auto">Expedia.co.kr 에서 실시간 가격을 크롤링하는 프로그램</h4>
+        <div class="text-right">
+            <small class="mb-auto">Status: <label class="text-info" id="lbl-status">OK</label></small>
+        </div>
+    </div>
+
+    <div class="main">
+        <form method="post" action="/">
+            <div class="row">
+                <div class="col">
+                    <h4 class="mb-3">Add New Flight</h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col form-group">
+                    <label for="origin">출발 공항 코드</label>
+                    <input type="text" class="form-control" name="origin" id="origin" placeholder="예: ICN" required>
+                </div>
+                <div class="col form-group">
+                    <label for="destination">도착 공항 코드</label>
+                    <input type="text" class="form-control" name="destination" id="destination" placeholder="예: NRT"
+                           required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col form-group">
+                    <label for="departing">가는날</label>
+                    <input type="text" class="form-control" name="departing" id="departing" placeholder="yyyy.mm.dd"
+                           required>
+                </div>
+                <div class="col form-group">
+                    <label for="returning">오는날</label>
+                    <input type="text" class="form-control" name="returning" id="returning" placeholder="yyyy.mm.dd">
+                    <small id="returning-help" class="form-text text-muted">편도인 경우 빈칸 입력</small>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <button type="submit" class="btn btn-primary btn-block" id="btn-add">Add</button>
+                </div>
+            </div>
+        </form>
+
+
+        {% for message in get_flashed_messages() %}
+        <div class="flash">{{ message }}</div>
+        {% endfor %}
+    </div>
+
+
+    <div class="main">
+        <div class="row">
+            <div class="col">
+                <h4 class="mb-3">Monitoring Flights</h4>
+            </div>
+        </div>
+
+        <div class="list-group" id="flight-infos">
+        </div>
+
+    </div>
+
+
+    <footer class="footer">
+        <p>Created by wns349</p>
+    </footer>
+
+</div> <!-- /container -->
+
+<script>
+    var interval = null;
+
+    var ajax_call = function () {
+        //your jQuery ajax code
+        $.ajax({
+            url: "/flight_info",
+            type: "get",
+            success: function (response) {
+                $("#flight-infos").html(response);
+            },
+            error: function (xhr) {
+                //Do Something to handle error
+                $("#flight-infos").html("Something went wrong. Refresh this page.")
+                clearInterval(interval)
+            }
+        });
+    };
+
+    $(document).on('ready', function () {
+        ajax_call()
+        interval = setInterval(ajax_call, 3000);
+    });
+
+    function delete_me(id) {
+        $.ajax({
+            url: "/flight_info/" + id,
+            type: "delete",
+            success: function (response) {
+                $("#flight-infos").html(response);
+            },
+            error: function (xhr) {
+                //Do Something to handle error
+                $("#flight-infos").html("Something went wrong. Refresh this page.")
+                clearInterval(interval)
+            }
+        });
+    }
+</script>
+

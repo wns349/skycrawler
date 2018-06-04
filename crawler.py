@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import argparse
 import platform
 from datetime import datetime
 
@@ -56,12 +55,3 @@ def parse_expedia(driver, k=5):
 
     return datetime.now(), infos
 
-
-def _main(args):
-    pass
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    args = parser.parse_args()
-    _main(args)
