@@ -5,7 +5,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-def get_flight_details(flight_info, callback=None, driver_path="./driver/phantomjs.exe", driver_type="phantom"):
+def get_flight_details(flight_info, callback=None, driver_path="./driver/phantomjs.exe", driver_type="phantom",
+                       page_wait_interval=5):
     driver = None
     try:
         # create driver
@@ -19,7 +20,7 @@ def get_flight_details(flight_info, callback=None, driver_path="./driver/phantom
 
         goto_url(driver, flight_info["url"]["expedia"])
 
-        time.sleep(5)
+        time.sleep(page_wait_interval)
         print("Waiting until page loads.")
 
         flights = parse_expedia(driver, k=5)

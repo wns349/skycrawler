@@ -94,7 +94,8 @@ def dispatcher():
                     f["in_progress"] = True
                     executor.submit(crawler.get_flight_details(f, callback=emit_flight_info,
                                                                driver_path=config["driver_path"],
-                                                               driver_type=config["driver_type"]))
+                                                               driver_type=config["driver_type"]),
+                                    page_wait_interval=int(config["page_wait_interval"]))
                     cnt += 1
 
             deleted = [f["id"] for f in flight_qs.values() if f["deleted"]]
