@@ -4,8 +4,32 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap-grid.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap-reboot.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='skycrawler.css') }}">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 
+<script id="flight-info-template" type="text/x-custom-template">
+    <div class="list-group-item list-group-item-action flex-column align-items-start flight-info">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1" id="origin-destination">Origin-Destination</h5>
+            <h5 class="mb-auto" id="dates">Flight Dates</h5>
+            <button type="button" id="close" class="close" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div id="flights-available">
+        <ol class="mb-auto" id="flights">
+        </ol>
+        <p>
+        <h5 class="mb-auto"><a href="#" id="external-link" target="_blank">Expedia 에서 확인하기</a></h5>
+        </p>
+        <small><i>Last updated: <span id="updated_at"></span></i></small>
+        </div>
+        <div id="flights-not-available">
+            <h5 id="error">Loading...</h5>
+        </div>
+    </div>
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+<script src="{{ url_for('static', filename='skycrawler.js') }}"></script>
 <div class="container">
     <div class="header">
         <h3 class="text-info mb-auto">SkyCrawler</h3>
@@ -16,7 +40,7 @@
     </div>
 
     <div class="main">
-        <form method="post" action="/">
+        <form id="new-flight" method="post" action="#">
             <div class="row">
                 <div class="col">
                     <h4 class="mb-3">Add New Flight</h4>
@@ -77,44 +101,3 @@
     </footer>
 
 </div> <!-- /container -->
-
-<script>
-    var interval = null;
-
-    var ajax_call = function () {
-        //your jQuery ajax code
-        $.ajax({
-            url: "/flight_info",
-            type: "get",
-            success: function (response) {
-                $("#flight-infos").html(response);
-            },
-            error: function (xhr) {
-                //Do Something to handle error
-                $("#flight-infos").html("Something went wrong. Refresh this page.")
-                clearInterval(interval)
-            }
-        });
-    };
-
-    $(document).on('ready', function () {
-        ajax_call()
-        interval = setInterval(ajax_call, 3000);
-    });
-
-    function delete_me(id) {
-        $.ajax({
-            url: "/flight_info/" + id,
-            type: "delete",
-            success: function (response) {
-                $("#flight-infos").html(response);
-            },
-            error: function (xhr) {
-                //Do Something to handle error
-                $("#flight-infos").html("Something went wrong. Refresh this page.")
-                clearInterval(interval)
-            }
-        });
-    }
-</script>
-

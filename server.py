@@ -1,4 +1,3 @@
-import datetime
 import threading
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
@@ -17,17 +16,18 @@ socketio = SocketIO(app)
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", async=socketio.async_mode)
 
 
 @socketio.on("connect", namespace="/flights")
 def connect():
     emit("response", {"data": flight_qs})
+    print("Client connected")
 
 
 @socketio.on("disconnect", namespace="/flights")
 def disconnect():
-    print("Disconnected.")
+    print("Client disconnected.")
 
 
 @socketio.on("request", namespace="/flights")
@@ -37,18 +37,29 @@ def request(message):
     flight_info["origin"] = message["origin"]
     flight_info["destination"] = message["destination"]
     flight_info["departing"] = message["departing"]
-    flight_info["returning"] = message["returning"] if message["returning"] != "" else None
+    flight_info["returning"] = message["returning"]
     flight_info["direct_only"] = False
-    flight_info["updated_at"] = datetime.datetime.now() - datetime.timedelta(hours=1)
+    flight_info["updated_at"] = int(time.time() * 1000) - (60 * 60 * 1000);
     flight_info["flights"] = []
     flight_info["in_progress"] = False
     flight_info["error"] = None
+    flight_info["deleted"] = False
     flight_qs[flight_info["id"]] = flight_info
+    print("{} added.".format(message["id"]))
+
+    emit("flight-info", {"data": flight_info}, broadcast=True)
+
+
+@socketio.on("delete", namespace="/flights")
+def delete(message):
+    if message["id"] in flight_qs:
+        # flight_qs.pop(message["id"], None)
+        flight_qs[message["id"]]["deleted"] = True
+        print("{} deleted.".format(message["id"]))
 
 
 def emit_flight_info(flight_info):
-    with app.test_request_context():
-        socketio.emit("flight-info", {"data": flight_info}, broadcast=True)
+    socketio.emit("flight-info", {"data": flight_info}, broadcast=True, namespace="/flights")
 
 
 def dispatcher():
@@ -61,11 +72,17 @@ def dispatcher():
                 continue
 
             cnt = 0
-            for f in flight_qs:
-                if f["in_progress"] is False and f["updated_at"] + datetime.timedelta(minutes=5) <= datetime.datetime.now():
+            for f in flight_qs.values():
+                if f["in_progress"] is False \
+                        and f["deleted"] is False \
+                        and f["updated_at"] + (5 * 60 * 1000) <= int(time.time() * 1000):
                     f["in_progress"] = True
                     executor.submit(crawler.get_flight_details(f, callback=emit_flight_info))
                     cnt += 1
+
+            deleted = [f["id"] for f in flight_qs.values() if f["deleted"]]
+            for d in deleted:
+                flight_qs.pop(d, None)
 
             if cnt == 0:
                 time.sleep(1)

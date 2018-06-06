@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import time
-from datetime import datetime
 
 from selenium import webdriver
 
@@ -13,19 +12,18 @@ def get_flight_details(flight_info, callback=None, driver_path="./driver/phantom
         if driver is None:
             return
 
-        goto_expedia(driver,
-                     flight_info["origin"],
-                     flight_info["destination"],
-                     flight_info["departing"],
-                     flight_info["returning"],
-                     flight_info["direct_only"])
+        flight_info["url"] = goto_expedia(driver,
+                                          flight_info["origin"],
+                                          flight_info["destination"],
+                                          flight_info["departing"],
+                                          flight_info["returning"] if flight_info["returning"] != "" else None,
+                                          flight_info["direct_only"])
 
         time.sleep(5)
         print("Waiting until page loads.")
 
-        updated_at, flights = parse_expedia(driver, k=5)
-        print("{} {}".format(updated_at, flights))
-        flight_info["updated_at"] = updated_at
+        flights = parse_expedia(driver, k=5)
+        print("{}".format(flights))
         flight_info["flights"] = flights
 
     except Exception as e:
@@ -36,6 +34,7 @@ def get_flight_details(flight_info, callback=None, driver_path="./driver/phantom
         if driver is not None:
             driver.quit()
         flight_info["in_progress"] = False
+        flight_info["updated"] = int(time.time() * 1000)
         if callback is not None:
             callback(flight_info)
 
@@ -68,6 +67,8 @@ def goto_expedia(driver,
 
     driver.get(url)
 
+    return url
+
 
 def parse_expedia(driver, k=5):
     flight_data = driver.find_element_by_id("flightModuleList").find_elements_by_tag_name("li")
@@ -90,4 +91,4 @@ def parse_expedia(driver, k=5):
         except:
             continue
 
-    return datetime.now(), infos
+    return infos
