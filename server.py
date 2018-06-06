@@ -7,6 +7,10 @@ from flask_socketio import SocketIO, emit
 
 import crawler
 
+DRIVER_PATH = "./driver/chromedriver"
+DRIVER_TYPE = "chrome"
+REFRESH_INTERVAL = (5 * 60 * 1000)
+
 flight_qs = {}
 
 app = Flask(__name__)
@@ -58,6 +62,14 @@ def delete(message):
         print("{} deleted.".format(message["id"]))
 
 
+@socketio.on("refresh", namespace="/flights")
+def refresh(message):
+    if message["id"] in flight_qs:
+        if flight_qs[message["id"]]["in_progress"] is False:
+            flight_qs[message["id"]]["updated_at"] -= (REFRESH_INTERVAL + 5)
+            print("{} refresh requested".format(message["id"]))
+
+
 def emit_flight_info(flight_info):
     socketio.emit("flight-info", {"data": flight_info}, broadcast=True, namespace="/flights")
 
@@ -72,12 +84,16 @@ def dispatcher():
                 continue
 
             cnt = 0
-            for f in flight_qs.values():
+            ids = [x for x in flight_qs.keys()]
+            for i in ids:
+                f = flight_qs[i]
                 if f["in_progress"] is False \
                         and f["deleted"] is False \
-                        and f["updated_at"] + (5 * 60 * 1000) <= int(time.time() * 1000):
+                        and f["updated_at"] + REFRESH_INTERVAL <= int(time.time() * 1000):
                     f["in_progress"] = True
-                    executor.submit(crawler.get_flight_details(f, callback=emit_flight_info))
+                    executor.submit(crawler.get_flight_details(f, callback=emit_flight_info,
+                                                               driver_path=DRIVER_PATH,
+                                                               driver_type=DRIVER_TYPE))
                     cnt += 1
 
             deleted = [f["id"] for f in flight_qs.values() if f["deleted"]]

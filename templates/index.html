@@ -4,23 +4,27 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap-grid.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap-reboot.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='skycrawler.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 <script id="flight-info-template" type="text/x-custom-template">
     <div class="list-group-item list-group-item-action flex-column align-items-start flight-info">
         <div class="d-flex w-100 justify-content-between">
             <h5 class="mb-1" id="origin-destination">Origin-Destination</h5>
             <h5 class="mb-auto" id="dates">Flight Dates</h5>
-            <button type="button" id="close" class="close" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <i class="fa fa-refresh" style="font-size:24px" id="refresh"></i>
+            <i class="fa fa-close" style="font-size:24px" id="close"></i>
+{#            <button type="button" id="close" class="glyphicon glyphicon-remove" aria-label="Close">#}
+{#            </button>#}
         </div>
         <div id="flights-available">
-        <ol class="mb-auto" id="flights">
-        </ol>
-        <p>
-        <h5 class="mb-auto"><a href="#" id="external-link" target="_blank">Expedia 에서 확인하기</a></h5>
-        </p>
-        <small><i>Last updated: <span id="updated_at"></span></i></small>
+            Expedia 조회 결과:
+            <ol class="mb-auto" id="flights">
+            </ol>
+            <p>
+                <a href="#" id="external-link-expedia" target="_blank">Expedia 에서 확인하기</a><br/>
+                <a href="#" id="external-link-skyscanner" target="_blank">Skyscanner 에서 확인하기</a>
+            </p>
+            <small><i>Last updated: <span id="updated_at"></span></i></small>
         </div>
         <div id="flights-not-available">
             <h5 id="error">Loading...</h5>
@@ -33,10 +37,7 @@
 <div class="container">
     <div class="header">
         <h3 class="text-info mb-auto">SkyCrawler</h3>
-        <h4 class="mb-auto">Expedia.co.kr 에서 실시간 가격을 크롤링하는 프로그램</h4>
-        <div class="text-right">
-            <small class="mb-auto">Status: <label class="text-info" id="lbl-status">OK</label></small>
-        </div>
+        <h4 class="mb-auto">실시간 가격 크롤링하는 프로그램</h4>
     </div>
 
     <div class="main">
@@ -49,12 +50,13 @@
             <div class="row">
                 <div class="col form-group">
                     <label for="origin">출발 공항 코드</label>
-                    <input type="text" class="form-control" name="origin" id="origin" placeholder="예: ICN" required>
+                    <input type="text" class="form-control" name="origin" id="origin" placeholder="예: ICN"
+                           style="text-transform:uppercase" required>
                 </div>
                 <div class="col form-group">
                     <label for="destination">도착 공항 코드</label>
                     <input type="text" class="form-control" name="destination" id="destination" placeholder="예: NRT"
-                           required>
+                           style="text-transform:uppercase" required>
                 </div>
             </div>
             <div class="row">
@@ -78,7 +80,7 @@
 
 
         {% for message in get_flashed_messages() %}
-        <div class="flash">{{ message }}</div>
+            <div class="flash">{{ message }}</div>
         {% endfor %}
     </div>
 
