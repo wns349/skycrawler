@@ -1,3 +1,4 @@
+import configparser
 import threading
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
@@ -7,11 +8,9 @@ from flask_socketio import SocketIO, emit
 
 import crawler
 
-# DRIVER_PATH = "./driver/phantomjs"
-# DRIVER_TYPE = "phantom"
-DRIVER_PATH = "./driver/chromedriver"
-DRIVER_TYPE = "chrome"
-REFRESH_INTERVAL = (5 * 60 * 1000)
+config_master = configparser.ConfigParser()
+config_master.read("./config.ini")
+config = config_master["DEFAULT"]
 
 flight_qs = {}
 
@@ -68,7 +67,7 @@ def delete(message):
 def refresh(message):
     if message["id"] in flight_qs:
         if flight_qs[message["id"]]["in_progress"] is False:
-            flight_qs[message["id"]]["updated_at"] -= (REFRESH_INTERVAL + 5)
+            flight_qs[message["id"]]["updated_at"] -= (int(config["refresh_interval"]) + 5)
             print("{} refresh requested".format(message["id"]))
 
 
@@ -91,11 +90,11 @@ def dispatcher():
                 f = flight_qs[i]
                 if f["in_progress"] is False \
                         and f["deleted"] is False \
-                        and f["updated_at"] + REFRESH_INTERVAL <= int(time.time() * 1000):
+                        and f["updated_at"] + int(config["refresh_interval"]) <= int(time.time() * 1000):
                     f["in_progress"] = True
                     executor.submit(crawler.get_flight_details(f, callback=emit_flight_info,
-                                                               driver_path=DRIVER_PATH,
-                                                               driver_type=DRIVER_TYPE))
+                                                               driver_path=config["driver_path"],
+                                                               driver_type=config["driver_type"]))
                     cnt += 1
 
             deleted = [f["id"] for f in flight_qs.values() if f["deleted"]]
