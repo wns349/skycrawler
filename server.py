@@ -7,6 +7,8 @@ from flask_socketio import SocketIO, emit
 
 import crawler
 
+# DRIVER_PATH = "./driver/phantomjs"
+# DRIVER_TYPE = "phantom"
 DRIVER_PATH = "./driver/chromedriver"
 DRIVER_TYPE = "chrome"
 REFRESH_INTERVAL = (5 * 60 * 1000)

@@ -27,7 +27,8 @@ function addFlightInfo(id, flightInfo, refreshFlightInfo, deleteFlightInfo) {
         divFlightInfo.find("#flights").empty();
         $.each(flightInfo["flights"], function (i, flight) {
             var li = $("<li>");
-            li.text(flight["time"] + "\t" + flight["airline"] + "\t" + flight["price"]);
+            li.text(flight["depart"] + "\t" + flight["return"] + "\t" + flight["airline"] + "\t" + flight["price"]);
+            // li.text(flight["airline"] + "\t" + flight["depart"] + "\t" + flight["return"] + "\t" + flight["price"]);
             if (flight["airline"] == "이스타항공") {
                 li.attr("class", "eastar");
             }

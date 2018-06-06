@@ -23,6 +23,7 @@ def get_flight_details(flight_info, callback=None, driver_path="./driver/phantom
         print("Waiting until page loads.")
 
         flights = parse_expedia(driver, k=5)
+        # flights = parse_skyscanner(driver, k=5)
         print("{}".format(flights))
         flight_info["flights"] = flights
 
@@ -96,6 +97,52 @@ def goto_url(driver, url):
     return url
 
 
+def parse_skyscanner(driver, k=5):
+    print(driver.page_source)
+    flight_data = driver.find_element_by_class_name("day-list-container") \
+        .find_element_by_tag_name("ul").find_elements_by_tag_name("li")
+    infos = []
+
+    idx = 0
+    while len(infos) < k and idx < len(flight_data):
+        try:
+            data = flight_data[idx]
+            info = {}
+
+            tickets = data.find_elements_by_class_name("bpk-ticket__paper")
+            tokens = tickets[0].text.split("\n")
+            info["airline"] = tokens[0].replace(" ", "")
+            info["depart"] = "{}-{}".format(tokens[1], tokens[5])
+            if len(tokens) > 11:
+                info["return"] = "{}-{}".format(tokens[7], tokens[11])
+            tokens = tickets[1].text.split("\n")
+            info["price"] = tokens[1]
+
+            # info["airline"] = data.find_element_by_class_name("airline-name").text.replace(" ", "")
+            #
+            # leg_infos = data.find_elements_by_class_name("leg-info")
+            # depart_leg_info = leg_infos[0]
+            # spans = depart_leg_info.find_elements_by_tag_name("span")
+            # spans = [s for s in spans if "LegInfo__times" in s.get_attribute("class")]
+            # info["depart"] = "{}-{}".format(spans[0].text, spans[1].text)
+            #
+            # if len(leg_infos) > 1:
+            #     return_leg_info = leg_infos[1]
+            #     spans = return_leg_info.find_elements_by_tag_name("span")
+            #     spans = [s for s in spans if "LegInfo__times" in s.get_attribute("class")]
+            #     info["return"] = "{}-{}".format(spans[0].text, spans[1].text)
+            #
+            # div_price = data.find_element_by_class_name("bpk-ticket__paper")
+            # div_price.find_element_by_tag_name("a").text
+
+            infos.append(info)
+            idx += 1
+            pass
+        except Exception as e:
+            continue
+    return infos
+
+
 def parse_expedia(driver, k=5):
     flight_data = driver.find_element_by_id("flightModuleList").find_elements_by_tag_name("li")
     infos = []
@@ -107,14 +154,15 @@ def parse_expedia(driver, k=5):
             info = {}
             dt = data.find_element_by_xpath(".//span[@data-test-id='departure-time']").text
             at = data.find_element_by_xpath(".//span[@data-test-id='arrival-time']").text
-            info["time"] = "{}-{}".format(dt, at)
+            info["depart"] = "{}-{}".format(dt, at)
+            info["return"] = ""
             info["airline"] = data.find_element_by_xpath(".//span[@data-test-id='airline-name']").text
             info["price"] = data.find_element_by_xpath(".//span[@data-test-id='listing-price-dollars']").text
             # info["price_type"] = data.find_element_by_xpath(".//span[@data-test-id='price-msg-route-type']").text
             # info["flight-info"] = data.find_element_by_xpath(".//span[@data-test-id='flight-info']").text
             infos.append(info)
             idx += 1
-        except:
+        except Exception as e:
             continue
 
     return infos
