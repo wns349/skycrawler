@@ -1,8 +1,66 @@
 # -*- coding: utf-8 -*-
+import logging
+import threading
 import time
+from multiprocessing import Event
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+
+logger = logging.getLogger(__name__)
+
+
+class Crawler(threading.Thread):
+    def __init__(self, q, callback=None, driver_path="./driver/phantomjs.exe", driver_type="phantom",
+                 page_wait_interval=5):
+        super().__init__()
+        self.q = q
+        self.driver = None
+        self.driver_path = driver_path
+        self.driver_type = driver_type
+        self.page_wait_interval = page_wait_interval
+        self.callback = callback
+        self.evt = Event()
+
+    def run(self):
+        while not self.evt.is_set():
+            flight_info = self.q.get()
+            try:
+                if self.driver is None:
+                    self.driver = start_driver(self.driver_path, self.driver_type)
+
+                flight_info["url"] = {}
+                flight_info["url"]["expedia"] = make_url_expedia(flight_info)
+                flight_info["url"]["skyscanner"] = make_url_skyscanner(flight_info)
+
+                goto_url(self.driver, flight_info["url"]["expedia"])
+
+                time.sleep(self.page_wait_interval)
+                logger.debug("Waiting until page loads.")
+
+                flights = parse_expedia(self.driver, k=5)
+                # flights = parse_skyscanner(driver, k=5)
+                logger.debug("{}".format(flights))
+                flight_info["flights"] = flights
+            except Exception as e:
+                flight_info["error"] = str(e)
+                logger.error(str(e))
+
+            finally:
+                if self.driver is not None:
+                    self.driver.quit()
+                    self.driver = None
+                flight_info["in_progress"] = False
+                flight_info["updated_at"] = int(time.time() * 1000)
+                if self.callback is not None:
+                    self.callback(flight_info)
+
+        if self.driver is not None:
+            self.driver.quit()
+            self.driver = None
+
+    def stop(self):
+        self.evt.set()
 
 
 def get_flight_details(flight_info, callback=None, driver_path="./driver/phantomjs.exe", driver_type="phantom",
@@ -21,16 +79,16 @@ def get_flight_details(flight_info, callback=None, driver_path="./driver/phantom
         goto_url(driver, flight_info["url"]["expedia"])
 
         time.sleep(page_wait_interval)
-        print("Waiting until page loads.")
+        logger.debug("Waiting until page loads.")
 
         flights = parse_expedia(driver, k=5)
         # flights = parse_skyscanner(driver, k=5)
-        print("{}".format(flights))
+        logger.debug("{}".format(flights))
         flight_info["flights"] = flights
 
     except Exception as e:
         flight_info["error"] = str(e)
-        print(str(e))
+        logger.error(str(e))
 
     finally:
         if driver is not None:
@@ -93,13 +151,13 @@ def make_url_expedia(flight_info):
 
 
 def goto_url(driver, url):
-    print("Going to {}".format(url))
+    logger.info("Going to {}".format(url))
     driver.get(url)
     return url
 
 
 def parse_skyscanner(driver, k=5):
-    print(driver.page_source)
+    logger.debug(driver.page_source)
     flight_data = driver.find_element_by_class_name("day-list-container") \
         .find_element_by_tag_name("ul").find_elements_by_tag_name("li")
     infos = []
