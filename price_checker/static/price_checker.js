@@ -1,47 +1,42 @@
 $(document).ready(function () {
+    $("#start-date").datepicker({dateFormat: 'yy.mm.dd'});
+    $("#end-date").datepicker({dateFormat: 'yy.mm.dd'});
+
     $("form#new-flight").submit(function (event) {
         event.preventDefault();
 
         var origin = $("input[name='origin']").val().toUpperCase();
         var destination = $("input[name='destination']").val().toUpperCase();
-        var base_date = $("input[name='base-date']").val();
-        var returning = $("input[name='returning']").val();
-        var after = $("input[name='base-date-after']").val();
-        var id = origin + destination + base_date.replace(/\./g, "") + returning + "_" + after;
+        var start_date = $("input[name='start-date']").val();
+        var end_date = $("input[name='end-date']").val();
+        var duration = $("select[name='duration']").val();
+        var duration_text = $("select[name='duration'] :selected").text();
+        var id = origin + destination + "_" + duration;
 
         var formData = new FormData();
         formData.append("origin", origin);
         formData.append("destination", destination);
-        formData.append("base_date", base_date);
-        formData.append("returning", returning);
-        formData.append("after", after);
+        formData.append("start_date", start_date);
+        formData.append("end_date", end_date);
+        formData.append("duration", duration);
+        formData.append("duration_text", duration_text);
 
         var divFlightInfo = $("div#" + id);
-        if (divFlightInfo.length) {
-            document.getElementById(id).scrollIntoView();
-        } else {
-            $.ajax({
-                url: "/api/flight/",
-                type: "POST",
-                //contentType: "application/x-www-form-urlencoded",
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function (result, status, xhr) {
-                    // $("#flash").hide();
-                    addFlightInfo(id, result);
-                },
-                error: function (xhr, status, error) {
-                    // $("#flash").text(error);
-                    // $("#flash").show();
-                    console.log(xhr);
-                    console.log(status);
-                    console.log(error);
-                }
-            });
+        $.ajax({
+            url: "/api/flight/",
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (result, status, xhr) {
+                addFlightInfo(id, result);
+            },
+            error: function (xhr, status, error) {
+                alert(status + "/" + error);
+            }
+        });
 
-            window.scrollTo(0, document.body.scrollHeight);
-        }
+        window.scrollTo(0, document.body.scrollHeight);
 
         return false;
     });
@@ -63,8 +58,20 @@ function addFlightInfo(id, flightInfo) {
     });
     // header
     divFlightInfo.find("#origin-destination").text(flightInfo["origin"] + "-" + flightInfo["destination"]);
+    divFlightInfo.find("#trip-duration").text(flightInfo["duration"]);
 
     // details
+    divFlightInfo.find("#flight-details").empty();
+    // add detail header
+    $("<div class='row font-weight-bold'>" +
+        "<div class='col-md-2'>출발-도착</div>" +
+        "<div class='col-md-3'>Depart</div>" +
+        "<div class='col-md-3'>Return</div>" +
+        "<div class='col-md-2'>Expedia</div>" +
+        "<div class='col-md-2'>Skyscanner</div>" +
+        "</div>").appendTo(divFlightInfo.find("#flight-details"));
+
+    // add detail
     $(flightInfo["details"]).each(function (idx, detail) {
         $("<div class='row'>" +
             "<div class='col-md-2'>" + flightInfo["origin"] + "-" + flightInfo["destination"] + "</div>" +

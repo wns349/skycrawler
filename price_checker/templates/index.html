@@ -1,15 +1,15 @@
 <!doctype html>
 <title>SkyCrawler</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap-grid.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap-reboot.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='skycrawler.css') }}">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='price_checker.css') }}">
 
 <script id="flight-info-template" type="text/x-custom-template">
     <div class="list-group-item list-group-item-action flex-column align-items-start flight-info">
         <div class="d-flex w-100 justify-content-between">
             <h5 class="mb-1" id="origin-destination">Origin-Destination</h5>
+            <h5 class="mb-1" id="trip-duration">Duration</h5>
             <i class="fa fa-close" style="font-size:24px" id="close"></i>
         </div>
         <div id="flight-details">
@@ -18,6 +18,8 @@
 </script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="{{ url_for('static', filename='price_checker.js') }}"></script>
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <div class="container">
     <div class="header">
         <h3 class="text-info mb-auto">SkyCrawler - Price Checker</h3>
@@ -45,19 +47,34 @@
             </div>
             <div class="row">
                 <div class="col form-group">
-                    <label for="base-date">기준일 (D-0)</label>
-                    <input type="text" class="form-control" name="base-date" id="base-date" placeholder="yyyy.mm.dd"
+                    <label for="start-date">시작일 (D-0)</label>
+                    <input type="text" class="form-control" name="start-date" id="start-date" placeholder="yyyy.mm.dd"
                            required>
                 </div>
                 <div class="col form-group">
-                    <label for="returning">체류기간 (기준일 기준 D+X)</label>
-                    <input type="number" class="form-control" name="returning" id="returning" placeholder="D+일수">
-                    <small id="returning-help" class="form-text text-muted">편도인 경우 빈칸 입력</small>
+                    <label for="end-date">종료일</label>
+                    <input type="text" class="form-control" name="end-date" id="end-date" placeholder="yyyy.mm.dd"
+                           required>
                 </div>
                 <div class="col form-group">
-                    <label for="base-date-after">기준일+x (D+x)</label>
-                    <input type="number" class="form-control" name="base-date-after" id="base-date-after"
-                           placeholder="0일">
+                    <label for="duration">체류기간</label>
+                    <select class="form-control" id="duration" name="duration">
+                        <option value="-1">편도</option>
+                        <option value="0">무박</option>
+                        <option value="1">1박2일</option>
+                        <option value="2" selected>2박3일</option>
+                        <option value="3">3박4일</option>
+                        <option value="4">4박5일</option>
+                        <option value="5">5박6일</option>
+                        <option value="6">6박7일</option>
+                        <option value="7">7박8일</option>
+                        <option value="8">8박9일</option>
+                        <option value="9">9박10일</option>
+                        <option value="10">10박11일</option>
+                        <option value="11">11박12일</option>
+                        <option value="12">12박13일</option>
+                        <option value="13">13박14일</option>
+                    </select>
                 </div>
             </div>
             <div class="row">
@@ -66,12 +83,6 @@
                 </div>
             </div>
         </form>
-        <p></p>
-        <div class="row">
-            <div class="col alert-danger alert" id="flash" role="alert">
-                Message goes here
-            </div>
-        </div>
     </div>
 
 

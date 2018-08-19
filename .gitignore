@@ -9,3 +9,5 @@ __pycache__/*
 /zip/*
 data.json
 /build/*
+**/build/*
+**/dist/*

@@ -1,6 +1,6 @@
 from flask_restplus import Namespace, Resource, fields, reqparse
 from flask import request
-
+from werkzeug.exceptions import InternalServerError
 from datetime import datetime, timedelta
 import logging
 
@@ -10,17 +10,25 @@ DT_INPUT_FORMAT = "%Y.%m.%d"
 DT_OUTPUT_FORMAT = "%Y.%m.%d(%a)"
 api = Namespace("flight", description="Flight")
 
+parser = reqparse.RequestParser()
+parser.add_argument("origin", type=str, required=True, location="form", help="Airport code (e.g. ICN)")
+parser.add_argument("destination", type=str, required=True, location="form", help="Airport code (e.g. NRT)")
+parser.add_argument("start_date", type=str, required=True, location="form", help="Date format in yyyy.mm.dd")
+parser.add_argument("end_date", type=str, required=True, location="form", help="Date format in yyyy.mm.dd")
+parser.add_argument("duration", type=int, required=True, location="form")
+parser.add_argument("duration_text", type=str, required=False, location="form")
+
 flight_detail = api.model("Flight detail", {
     "depart_date": fields.String(),
     "return_date": fields.String(),
     "expedia": fields.String(),
-    "skyscanner": fields.String(),
-    "duration": fields.Integer()
+    "skyscanner": fields.String()
 })
 
 flight_response = api.model("Flight response", {
     "origin": fields.String(required=True),
     "destination": fields.String(required=True),
+    "duration": fields.String(),
     "details": fields.List(fields.Nested(flight_detail))
 })
 
@@ -31,7 +39,8 @@ def _make_links(origin, destination, depart_date, return_date):
     }
     if return_date is not None:
         response["return_date"] = return_date.strftime(DT_OUTPUT_FORMAT)
-        response["duration"] = (return_date - depart_date).days
+    else:
+        response["return_date"] = "N/A"
 
     response["expedia"] = _make_link_expedia(origin, destination, depart_date, return_date)
     response["skyscanner"] = _make_link_skyscanner(origin, destination, depart_date, return_date)
@@ -55,10 +64,12 @@ def _make_link_skyscanner(origin, destination, depart_date, return_date, direct_
 def _make_link_expedia(origin, destination, depart_date, return_date, direct_only=True):
     dt_format = "%Y.%m.%d"
     depart_date = depart_date.strftime(dt_format)
-    return_date = return_date.strftime(dt_format)
+    if return_date is not None:
+        return_date = return_date.strftime(dt_format)
     url = "https://www.expedia.co.kr/Flights-Search?flight-type=on&mode=search"
     url += "&starDate={}".format(depart_date)
-    url += "&endDate={}".format(return_date)
+    if return_date is not None:
+        url += "&endDate={}".format(return_date)
     url += "&trip={}".format("roundtrip" if return_date is not None else "oneway")
     url += "&leg1=from%3A{}%2Cto%3A{}%2Cdeparture%3A{}TANYT".format(origin, destination, depart_date)
     url += "&leg2=from%3A{}%2Cto%3A{}%2Cdeparture%3A{}TANYT".format(destination, origin, return_date)
@@ -67,34 +78,36 @@ def _make_link_expedia(origin, destination, depart_date, return_date, direct_onl
     return url
 
 
+@api.errorhandler(ValueError)
+def handler_value_error(error):
+    return str(error), 500
+
+
 @api.route("/")
 class Flight(Resource):
-    parser = reqparse.RequestParser()
-    parser.add_argument("origin", type=str, required=True, location="form", help="Airport code (e.g. ICN)")
-    parser.add_argument("destination", type=str, required=True, location="form", help="Airport code (e.g. NRT)")
-    parser.add_argument("base_date", type=str, required=True, location="form", help="Date format in yyyy.mm.dd")
-    parser.add_argument("returning", type=int, required=True, location="form", help="x days")
-    parser.add_argument("after", type=int, required=True, location="form", help="x days")
-
     @api.expect(parser, validate=True)
     @api.marshal_with(flight_response)
     def post(self):
         # parse form
         data = request.form
         logger.info("RECV: {}".format(data))
-        base_date = datetime.strptime(data["base_date"], DT_INPUT_FORMAT)
+        start_date = datetime.strptime(data["start_date"], DT_INPUT_FORMAT)
+        end_date = datetime.strptime(data["end_date"], DT_INPUT_FORMAT)
         is_round_trip = False
-        if "returning" in data:
-            return_after = int(data["returning"])
-            is_round_trip = True
-        after = int(data["after"]) if "after" in data else 0
+        return_after = 0
+        if "duration" in data and data["duration"] != "":
+            return_after = int(data["duration"])
+            if return_after < 0:
+                is_round_trip = False
+            else:
+                is_round_trip = True
 
         # ready dates
         today = datetime.now()
-        # today = today.replace(hour=0, minute=0, second=0, microsecond=0)
+        total_days = (end_date - start_date).days + 1
         dates = []
-        for i in range(after + 1):
-            depart_date = base_date + timedelta(days=i)
+        for i in range(total_days):
+            depart_date = start_date + timedelta(days=i)
             if depart_date < today:
                 continue
             if is_round_trip:
@@ -108,7 +121,8 @@ class Flight(Resource):
         response = {
             "origin": data["origin"],
             "destination": data["destination"],
-            "details": []
+            "details": [],
+            "duration": data["duration_text"]
         }
         for date in dates:
             response["details"].append(_make_links(data["origin"], data["destination"], date[0], date[1]))
