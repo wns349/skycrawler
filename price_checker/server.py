@@ -1,6 +1,7 @@
 import logging
 import os
 from flask import Flask, render_template, request
+from werkzeug.exceptions import BadRequest
 from price_checker.apis import api
 
 PORT = 5110
@@ -26,6 +27,10 @@ def _initialize_app():
     @app.route("/")
     def index():
         return render_template("index.html")
+
+    @app.errorhandler(BadRequest)
+    def handle_bad_request(e):
+        return 'bad request!', 400
 
     api.init_app(app)
 

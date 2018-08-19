@@ -10,24 +10,9 @@
     <div class="list-group-item list-group-item-action flex-column align-items-start flight-info">
         <div class="d-flex w-100 justify-content-between">
             <h5 class="mb-1" id="origin-destination">Origin-Destination</h5>
-            <h5 class="mb-auto" id="dates">Flight Dates</h5>
-            <i class="fa fa-refresh" style="font-size:24px" id="refresh"></i>
             <i class="fa fa-close" style="font-size:24px" id="close"></i>
-            {#            <button type="button" id="close" class="glyphicon glyphicon-remove" aria-label="Close">#}
-            {#            </button>#}
         </div>
-        <div id="flights-available">
-            Expedia 조회 결과:
-            <ol class="mb-auto" id="flights">
-            </ol>
-            <p>
-                <a href="#" id="external-link-expedia" target="_blank">Expedia 에서 확인하기</a><br/>
-                <a href="#" id="external-link-skyscanner" target="_blank">Skyscanner 에서 확인하기</a>
-            </p>
-            <small><i>Last updated: <span id="updated_at"></span></i></small>
-        </div>
-        <div id="flights-not-available">
-            <h5 id="error">Loading...</h5>
+        <div id="flight-details">
         </div>
     </div>
 </script>
@@ -70,11 +55,6 @@
                     <small id="returning-help" class="form-text text-muted">편도인 경우 빈칸 입력</small>
                 </div>
                 <div class="col form-group">
-                    <label for="base-date-before">기준일-x (D-x)</label>
-                    <input type="number" class="form-control" name="base-date-before" id="base-date-before"
-                           placeholder="0일">
-                </div>
-                <div class="col form-group">
                     <label for="base-date-after">기준일+x (D+x)</label>
                     <input type="number" class="form-control" name="base-date-after" id="base-date-after"
                            placeholder="0일">
@@ -86,6 +66,12 @@
                 </div>
             </div>
         </form>
+        <p></p>
+        <div class="row">
+            <div class="col alert-danger alert" id="flash" role="alert">
+                Message goes here
+            </div>
+        </div>
     </div>
 
 
@@ -97,26 +83,6 @@
         </div>
 
         <div class="list-group" id="flight-infos">
-            <div class="list-group-item list-group-item-action flex-column align-items-start flight-info">
-                <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1" id="origin-destination">Origin-Destination</h5>
-                    <i class="fa fa-close" style="font-size:24px" id="close"></i>
-                </div>
-                <div class="row" id="flight-details">
-                    <div class="col-md-2" id="flight-code">
-                        ICN-NRT
-                    </div>
-                    <div class="col-md-6" id="flight-date">
-                        2018.08.14 - 2018.08.17
-                    </div>
-                    <div class="col-md-2" id="flight-detail-expedia">
-                        Expedia
-                    </div>
-                    <div class="col-md-2" id="flight-detail-skyscanner">
-                        Skyscanner
-                    </div>
-                </div>
-            </div>
         </div>
 
     </div>

@@ -7,13 +7,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 DT_INPUT_FORMAT = "%Y.%m.%d"
+DT_OUTPUT_FORMAT = "%Y.%m.%d(%a)"
 api = Namespace("flight", description="Flight")
 
 flight_detail = api.model("Flight detail", {
     "depart_date": fields.String(),
     "return_date": fields.String(),
     "expedia": fields.String(),
-    "skyscanner": fields.String()
+    "skyscanner": fields.String(),
+    "duration": fields.Integer()
 })
 
 flight_response = api.model("Flight response", {
@@ -25,10 +27,11 @@ flight_response = api.model("Flight response", {
 
 def _make_links(origin, destination, depart_date, return_date):
     response = {
-        "depart_date": depart_date.strftime(DT_INPUT_FORMAT)
+        "depart_date": depart_date.strftime(DT_OUTPUT_FORMAT)
     }
     if return_date is not None:
-        response["return_date"] = return_date.strftime(DT_INPUT_FORMAT)
+        response["return_date"] = return_date.strftime(DT_OUTPUT_FORMAT)
+        response["duration"] = (return_date - depart_date).days
 
     response["expedia"] = _make_link_expedia(origin, destination, depart_date, return_date)
     response["skyscanner"] = _make_link_skyscanner(origin, destination, depart_date, return_date)
@@ -71,7 +74,6 @@ class Flight(Resource):
     parser.add_argument("destination", type=str, required=True, location="form", help="Airport code (e.g. NRT)")
     parser.add_argument("base_date", type=str, required=True, location="form", help="Date format in yyyy.mm.dd")
     parser.add_argument("returning", type=int, required=True, location="form", help="x days")
-    parser.add_argument("before", type=int, required=True, location="form", help="x days")
     parser.add_argument("after", type=int, required=True, location="form", help="x days")
 
     @api.expect(parser, validate=True)
@@ -85,14 +87,13 @@ class Flight(Resource):
         if "returning" in data:
             return_after = int(data["returning"])
             is_round_trip = True
-        before = int(data["before"]) if "before" in data else 0
         after = int(data["after"]) if "after" in data else 0
 
         # ready dates
         today = datetime.now()
         # today = today.replace(hour=0, minute=0, second=0, microsecond=0)
         dates = []
-        for i in range(-1 * before, after + 1):
+        for i in range(after + 1):
             depart_date = base_date + timedelta(days=i)
             if depart_date < today:
                 continue
