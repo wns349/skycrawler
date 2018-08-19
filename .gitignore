@@ -5,9 +5,7 @@ __pycache__/*
 
 *.pyc
 *.log
-/driver/*
-/zip/*
-data.json
-/build/*
+**/driver/*
+**/zip/*
 **/build/*
 **/dist/*
