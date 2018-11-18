@@ -89,7 +89,7 @@ def _make_link_interpark_domestic(origin, destination, depart_date, return_date,
     url += "&depdate={}".format(depart_date)
     if return_date is not None:
         url += "&retdate={}".format(return_date)
-        url += "&trip=RT"
+    url += "&trip={}".format("RT" if return_date is not None else "OW")
     url += "&dep={}&arr={}".format(origin, destination)
     url += "&dep2={}&arr2={}".format(destination, origin)
     return url
