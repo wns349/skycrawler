@@ -44,7 +44,6 @@ $(document).ready(function () {
 });
 
 function addFlightInfo(id, flightInfo) {
-    console.log(flightInfo);
     var divFlightInfo = $("div#" + id);
     if (!divFlightInfo.length) {
         var template = $("#flight-info-template").html();
@@ -65,20 +64,22 @@ function addFlightInfo(id, flightInfo) {
     // add detail header
     $("<div class='row font-weight-bold'>" +
         "<div class='col-md-2'>출발-도착</div>" +
-        "<div class='col-md-3'>Depart</div>" +
-        "<div class='col-md-3'>Return</div>" +
+        "<div class='col-md-2'>Depart</div>" +
+        "<div class='col-md-2'>Return</div>" +
         "<div class='col-md-2'>Expedia</div>" +
         "<div class='col-md-2'>Skyscanner</div>" +
+        "<div class='col-md-2'>인터파크(국내선)</div>" +
         "</div>").appendTo(divFlightInfo.find("#flight-details"));
 
     // add detail
     $(flightInfo["details"]).each(function (idx, detail) {
         $("<div class='row'>" +
             "<div class='col-md-2'>" + flightInfo["origin"] + "-" + flightInfo["destination"] + "</div>" +
-            "<div class='col-md-3'>" + detail["depart_date"] + "</div>" +
-            "<div class='col-md-3'>" + detail["return_date"] + "</div>" +
+            "<div class='col-md-2'>" + detail["depart_date"] + "</div>" +
+            "<div class='col-md-2'>" + detail["return_date"] + "</div>" +
             "<div class='col-md-2'><a href='" + detail["expedia"] + "' target='_blank'>Expedia</a></div>" +
             "<div class='col-md-2'><a href='" + detail["skyscanner"] + "' target='_blank'>Skyscanner</a></div>" +
+            "<div class='col-md-2'><a href='" + detail["interpark_domestic"] + "' target='_blank'>인터파크(국내선)</a></div>" +
             "</div>").appendTo(divFlightInfo.find("#flight-details"));
     })
 }

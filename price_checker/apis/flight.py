@@ -22,7 +22,8 @@ flight_detail = api.model("Flight detail", {
     "depart_date": fields.String(),
     "return_date": fields.String(),
     "expedia": fields.String(),
-    "skyscanner": fields.String()
+    "skyscanner": fields.String(),
+    "interpark_domestic": fields.String()
 })
 
 flight_response = api.model("Flight response", {
@@ -44,6 +45,7 @@ def _make_links(origin, destination, depart_date, return_date):
 
     response["expedia"] = _make_link_expedia(origin, destination, depart_date, return_date)
     response["skyscanner"] = _make_link_skyscanner(origin, destination, depart_date, return_date)
+    response["interpark_domestic"] = _make_link_interpark_domestic(origin, destination, depart_date, return_date)
     return response
 
 
@@ -75,6 +77,21 @@ def _make_link_expedia(origin, destination, depart_date, return_date, direct_onl
     url += "&leg2=from%3A{}%2Cto%3A{}%2Cdeparture%3A{}TANYT".format(destination, origin, return_date)
     url += "&passengers=children%3A{}%2Cadults%3A{}%2Cseniors%3A{}%2Cinfantinlap%3AY".format("0", "1", "0")
     url += "&options=cabinclass%3Aeconomy%2Cmaxhops%3A{}".format("0" if direct_only else "1")
+    return url
+
+
+def _make_link_interpark_domestic(origin, destination, depart_date, return_date, direct_only=True):
+    dt_format = "%Y%m%d"
+    depart_date = depart_date.strftime(dt_format)
+    if return_date is not None:
+        return_date = return_date.strftime(dt_format)
+    url = "http://domair.interpark.com/dom/main.do?adt=1&chd=0&inf=0"
+    url += "&depdate={}".format(depart_date)
+    if return_date is not None:
+        url += "&retdate={}".format(return_date)
+        url += "&trip=RT"
+    url += "&dep={}&arr={}".format(origin, destination)
+    url += "&dep2={}&arr2={}".format(destination, origin)
     return url
 
 
